@@ -112,8 +112,4 @@ export class OrdersService {
       topSellingItems: report[0]?.topSellingItems || [],
     };
   }
-
-  async deleteAll() {
-    return this.orderModel.deleteMany()
-  }
 }
