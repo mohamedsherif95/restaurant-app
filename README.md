@@ -28,3 +28,11 @@ docker compose up --build
 ```sh
 http://localhost:3000/api
 ```
+
+## Possible Enhancements
+
+- Authentication and role based authorization
+- Add cache, cache invalidation, and pagination to other consuming endpoints such as (get all orders)
+- Implement SOLID conforming design updates such as the abstract repository design pattern
+- Add more reports and insight specific endpoints such as customer/order frequency and sale/price analyses
+- Add unit tests and global error handling

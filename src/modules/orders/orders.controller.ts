@@ -4,7 +4,7 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './schemas/order.schema';
-import { redisKeys } from '../../configs/constants';
+import { redisConfigs } from '../../configs/constants';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags, PartialType } from '@nestjs/swagger';
 
 
@@ -85,7 +85,7 @@ export class OrdersController {
   })
   @Get('/reports/salesDaily')
   @UseInterceptors(CacheInterceptor)
-  @CacheKey(redisKeys.SALES_REPORT)
+  @CacheKey(redisConfigs.keys.SALES_REPORT)
   async generateDailySalesReport() {
     return this.ordersService.generateDailySalesReport();
   }

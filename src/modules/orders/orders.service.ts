@@ -12,7 +12,7 @@ import { Model } from 'mongoose';
 import * as moment from 'moment';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CacheInvalidatedEvent } from '../../types/events';
-import { redisKeys } from '../../configs/constants';
+import { redisConfigs, reportsConfig } from '../../configs/constants';
 
 @Injectable()
 export class OrdersService {
@@ -38,7 +38,7 @@ export class OrdersService {
       const order = await this.orderModel.create(documentData);
       this.eventEmmitter.emitAsync(
         CacheInvalidatedEvent.eventName,
-        new CacheInvalidatedEvent(redisKeys.SALES_REPORT),
+        new CacheInvalidatedEvent(redisConfigs.keys.SALES_REPORT),
       );
 
       return order;
@@ -64,7 +64,7 @@ export class OrdersService {
     }
     this.eventEmmitter.emitAsync(
       CacheInvalidatedEvent.eventName,
-      new CacheInvalidatedEvent(redisKeys.SALES_REPORT),
+      new CacheInvalidatedEvent(redisConfigs.keys.SALES_REPORT),
     );
 
     return updatedOrder;
@@ -105,7 +105,7 @@ export class OrdersService {
                 },
               },
               { $sort: { totalQuantity: -1 } },
-              { $limit: 10 },
+              { $limit: reportsConfig.topSellingItemsCount },
               {
                 $project: {
                   _id: 0,
