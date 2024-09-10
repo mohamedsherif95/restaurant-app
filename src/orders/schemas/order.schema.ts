@@ -4,15 +4,19 @@ import { HydratedDocument } from 'mongoose';
 
 @Schema({timestamps: true})
 export class Order {
-    @Prop([String])
-    items: string[];
-    
+    @Prop([{
+        name: String,
+        price: Number,
+        quantity: Number
+    }])
+    items: Array<Record<string, any>>;
+
     @Prop()
-    price: number;
+    totalPrice: number;
     
     @Prop(raw({
         name: { type: String },
-        phone: { type: Number },
+        phone: { type: String },
         email: { type: String },
     }))
     customer: Record<string, any>;

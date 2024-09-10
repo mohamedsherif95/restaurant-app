@@ -25,7 +25,6 @@ services:
       MONGO_URI: mongodb://admin:adminpassword123@mongo:27017/nest_db?authSource=admin
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
     command: npm run start:dev
 
 volumes:
