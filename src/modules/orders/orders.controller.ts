@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './schemas/order.schema';
+import { redisKeys } from '../../configs/constants';
+
 
 @Controller('orders')
 export class OrdersController {
@@ -17,6 +20,11 @@ export class OrdersController {
   async findAll(): Promise<Order[]> {
     return this.ordersService.findAll();
   }
+  
+  @Delete()
+  async deleteAll() {
+    return this.ordersService.deleteAll();
+  }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -29,6 +37,8 @@ export class OrdersController {
   }
 
   @Get('/reports/salesDaily')
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey(redisKeys.SALES_REPORT)
   async generateDailySalesReport() {
     return this.ordersService.generateDailySalesReport();
   }

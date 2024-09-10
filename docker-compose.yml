@@ -12,6 +12,14 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
   nestjs-app:
     build:
       context: .
@@ -21,11 +29,17 @@ services:
       - '3000:3000'
     depends_on:
       - mongo
+      - redis
     environment:
       MONGO_URI: mongodb://admin:adminpassword123@mongo:27017/nest_db?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_TTL: 5
+      REDIS_MAX: 10
     volumes:
       - .:/usr/src/app
     command: npm run start:dev
 
 volumes:
   mongo-data:
+  redis-data:

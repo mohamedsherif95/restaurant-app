@@ -5,20 +5,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Order } from './schemas/order.schema';
 import { Model } from 'mongoose';
 import * as moment from 'moment';
+import { CacheService } from '../cache/cache.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CacheInvalidatedEvent } from '../../types/events';
+import { redisKeys } from '../../configs/constants';
 
 @Injectable()
 export class OrdersService {
   constructor(
-    @InjectModel(Order.name) private orderModel: Model<Order>
+    @InjectModel(Order.name) private orderModel: Model<Order>,
+    private readonly eventEmmitter: EventEmitter2,
   ) {}
-  
-  async create(createOrderDto: CreateOrderDto) {
-    const documentData: Order = {
-      ...createOrderDto,
-      totalPrice: createOrderDto.items.reduce((acc, curr) => acc += (curr.price * curr.quantity), 0),
-    }
-    return this.orderModel.create(documentData);
-  }
 
   async findAll() {
     return this.orderModel.find();
@@ -26,6 +23,17 @@ export class OrdersService {
 
   async findOne(id: string) {
     return this.orderModel.findById(id);
+  }
+  
+  async create(createOrderDto: CreateOrderDto) {
+    const documentData: Order = {
+      ...createOrderDto,
+      totalPrice: createOrderDto.items.reduce((acc, curr) => acc += (curr.price * curr.quantity), 0),
+    }
+    const order = await this.orderModel.create(documentData);
+    this.eventEmmitter.emitAsync(CacheInvalidatedEvent.eventName, new CacheInvalidatedEvent(redisKeys.SALES_REPORT));
+    
+    return order;
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
@@ -37,6 +45,7 @@ export class OrdersService {
   if (!updatedOrder) {
     throw new NotFoundException(`Order with ID ${id} not found`);
   }
+  this.eventEmmitter.emitAsync(CacheInvalidatedEvent.eventName, new CacheInvalidatedEvent(redisKeys.SALES_REPORT));
 
   return updatedOrder;
   }
@@ -76,7 +85,14 @@ export class OrdersService {
                       }
                   },
                   { $sort: { totalQuantity: -1 } },
-                  { $limit: 10 }
+                  { $limit: 10 },
+                  { 
+                    $project: {
+                      _id: 0,
+                      name: "$_id",
+                      totalQuantity: 1
+                    }
+                  }
               ]
           }
       },
@@ -90,10 +106,14 @@ export class OrdersService {
     ]);
 
     return {
-      date: startOfDay.toISOString(),
+      date: startOfDay.toISOString().slice(0, 10),
       totalRevenue: report[0]?.totalRevenue || 0,
       totalOrders: report[0]?.totalOrders || 0,
       topSellingItems: report[0]?.topSellingItems || [],
     };
+  }
+
+  async deleteAll() {
+    return this.orderModel.deleteMany()
   }
 }
